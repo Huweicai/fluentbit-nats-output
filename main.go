@@ -39,7 +39,8 @@ func FLBPluginInit(plugin unsafe.Pointer) int {
 	config, err := NewNATSConfig(
 		output.FLBPluginConfigKey(plugin, "URL"),
 		output.FLBPluginConfigKey(plugin, "Subject"),
-		output.FLBPluginConfigKey(plugin, "TimeoutSeconds"))
+		output.FLBPluginConfigKey(plugin, "TimeoutSeconds"),
+		output.FLBPluginConfigKey(plugin, "Compression"))
 	if err != nil {
 		logs.WithError(err).Errorf("invalid config")
 		return output.FLB_ERROR

@@ -25,14 +25,15 @@ const (
 func NewNATSClient(c *NATSConfig) (*NATSClient, error) {
 	options := nats.GetDefaultOptions()
 	options.Url = c.URL
+	options.Compression = c.Compression
+	options.Timeout = time.Duration(c.TimeoutSeconds) * time.Second
+
 	options.RetryOnFailedConnect = true
+	options.MaxReconnect = natsMaxReconnect
+	options.ReconnectWait = natsReconnectWait
 	options.ReconnectedCB = func(conn *nats.Conn) {
 		logs.Warn("NATS reconnected successfully")
 	}
-
-	options.MaxReconnect = natsMaxReconnect
-	options.ReconnectWait = natsReconnectWait
-	options.Timeout = time.Duration(c.TimeoutSeconds) * time.Second
 	options.DisconnectedErrCB = func(conn *nats.Conn, err error) {
 		logs.Errorf("NATS disconnected, err:%v", err)
 	}
@@ -50,6 +51,7 @@ func NewNATSClient(c *NATSConfig) (*NATSClient, error) {
 	}, nil
 }
 
+// tryConnection will try to connect server with both plain and insecure tls mode
 func tryConnection(options nats.Options) (*nats.Conn, error) {
 	conn, err := options.Connect()
 	if err == nil && conn.IsConnected() {
@@ -80,9 +82,10 @@ type NATSConfig struct {
 	URL            string
 	Subject        string
 	TimeoutSeconds int
+	Compression    bool
 }
 
-func NewNATSConfig(urlStr, subject, timeoutSecondsStr string) (*NATSConfig, error) {
+func NewNATSConfig(urlStr, subject, timeoutSecondsStr, compressionStr string) (*NATSConfig, error) {
 	if urlStr == "" {
 		return nil, errors.New("nats url is required")
 	}
@@ -93,7 +96,7 @@ func NewNATSConfig(urlStr, subject, timeoutSecondsStr string) (*NATSConfig, erro
 
 	_, err := url.Parse(urlStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid url '%s' :%w", urlStr, err)
+		return nil, fmt.Errorf("invalid parameter URL '%s' :%w", urlStr, err)
 	}
 
 	// default 5 seconds timeout
@@ -101,7 +104,15 @@ func NewNATSConfig(urlStr, subject, timeoutSecondsStr string) (*NATSConfig, erro
 	if timeoutSecondsStr != "" {
 		timeoutSeconds, err = strconv.Atoi(timeoutSecondsStr)
 		if err != nil {
-			return nil, fmt.Errorf("invalid TimeoutSeconds '%s' :%w", timeoutSecondsStr, err)
+			return nil, fmt.Errorf("invalid parameter TimeoutSeconds '%s' :%w", timeoutSecondsStr, err)
+		}
+	}
+
+	compression := false
+	if compressionStr != "" {
+		compression, err = strconv.ParseBool(compressionStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid parameter Compression '%s' :%w", compressionStr, err)
 		}
 	}
 
@@ -109,5 +120,6 @@ func NewNATSConfig(urlStr, subject, timeoutSecondsStr string) (*NATSConfig, erro
 		URL:            urlStr,
 		Subject:        subject,
 		TimeoutSeconds: timeoutSeconds,
+		Compression:    compression,
 	}, nil
 }
