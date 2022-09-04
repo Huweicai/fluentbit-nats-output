@@ -77,17 +77,12 @@ func (c *NATSClient) Publish(data []byte) error {
 }
 
 type NATSConfig struct {
-	ID             string
 	URL            string
 	Subject        string
 	TimeoutSeconds int
 }
 
-func NewNATSConfig(id, urlStr, subject, timeoutSecondsStr string) (*NATSConfig, error) {
-	if id == "" {
-		return nil, errors.New("id is required")
-	}
-
+func NewNATSConfig(urlStr, subject, timeoutSecondsStr string) (*NATSConfig, error) {
 	if urlStr == "" {
 		return nil, errors.New("nats url is required")
 	}
@@ -111,7 +106,6 @@ func NewNATSConfig(id, urlStr, subject, timeoutSecondsStr string) (*NATSConfig, 
 	}
 
 	return &NATSConfig{
-		ID:             id,
 		URL:            urlStr,
 		Subject:        subject,
 		TimeoutSeconds: timeoutSeconds,

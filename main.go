@@ -36,7 +36,7 @@ func FLBPluginRegister(def unsafe.Pointer) int {
 func FLBPluginInit(plugin unsafe.Pointer) int {
 	logs = logs.WithField("stage", "FLBPluginInit")
 
-	config, err := NewNATSConfig(output.FLBPluginConfigKey(plugin, "ID"),
+	config, err := NewNATSConfig(
 		output.FLBPluginConfigKey(plugin, "URL"),
 		output.FLBPluginConfigKey(plugin, "Subject"),
 		output.FLBPluginConfigKey(plugin, "TimeoutSeconds"))
